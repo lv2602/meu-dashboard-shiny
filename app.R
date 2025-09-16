@@ -1,12 +1,121 @@
 # App Shiny Educacional RJ
 
-# Função pra logar erros
+# App Shiny Educacional RJ
+
+# Função para logar erros
 log_error <- function(e) {
   cat("ERRO NA INICIALIZAÇÃO:\n", conditionMessage(e), "\n")
   stop(e)
 }
 
+# Verifica existência de arquivos
+cat("Verificando arquivos...\n")
+files_to_check <- c("indicadores_rj_certo.xlsx", "Limite_de_Bairros.shp", "Limite_de_Bairros.dbf", "Limite_de_Bairros.shx")
+for (f in files_to_check) {
+  if (file.exists(f)) {
+    cat("Arquivo encontrado:", f, "\n")
+  } else {
+    cat("Arquivo NÃO encontrado:", f, "\n")
+  }
+}
+
+# Verifica pacotes
+cat("Verificando pacotes...\n")
+required_packages <- c("shiny", "bslib", "sf", "dplyr", "rlang", "tidyr", "magrittr", "ggplot2", "scales", "reactable", "plotly", "readxl", "stringi", "htmlwidgets", "tibble")
+for (pkg in required_packages) {
+  if (requireNamespace(pkg, quietly = TRUE)) {
+    cat("Pacote carregado:", pkg, "\n")
+  } else {
+    cat("Pacote NÃO encontrado:", pkg, "\n")
+  }
+}
+
 tryCatch({
+  # Carrega bibliotecas
+  suppressPackageStartupMessages({
+    library(shiny)
+    library(bslib)
+    library(sf)
+    library(dplyr)
+    library(rlang)
+    library(tidyr)
+    library(magrittr)
+    library(ggplot2)
+    library(scales)
+    library(reactable)
+    library(plotly)
+    library(readxl)
+    library(stringi)
+    library(htmlwidgets)
+    library(tibble)
+  })
+  cat("Bibliotecas carregadas com sucesso.\n")
+
+  # Caminhos de dados
+  options(
+    edu_data_path = file.path(".", "indicadores_rj_certo.xlsx"),
+    edu_shp_path = file.path(".", "Limite_de_Bairros.shp")
+  )
+  cat("Caminhos de dados definidos.\n")
+
+  # Excel
+  DATA_XLSX <- getOption("edu_data_path", file.path(".", "indicadores_rj_certo.xlsx"))
+  if (!file.exists(DATA_XLSX)) stop("Excel não encontrado em: ", DATA_XLSX, "\nColoque o arquivo na raiz.", call. = FALSE)
+  cat("Arquivo Excel encontrado:", DATA_XLSX, "\n")
+
+  # Carrega shapefile
+  load_bairros_shapefile <- function() {
+    rds <- file.path(".", "bairros_simplificado.rds")
+    if (file.exists(rds)) {
+      sfobj <- readRDS(rds)
+      if (is.na(sf::st_crs(sfobj))) sf::st_crs(sfobj) <- 4326
+      if (!"nome_bairro" %in% names(sfobj)) sfobj$nome_bairro <- choose_bairro_name(sfobj)
+      cat("Shapefile RDS carregado:", rds, "\n")
+      return(sfobj)
+    }
+    shp <- getOption("edu_shp_path", file.path(".","Limite_de_Bairros.shp"))
+    if (!file.exists(shp)) {
+      stop("Shapefile (.shp) não encontrado em: ", shp,
+           "\nColoque os arquivos na raiz do projeto.", call. = FALSE)
+    }
+    base <- sub("\\.shp$", "", shp, ignore.case = TRUE)
+    need <- c(".dbf", ".shx")
+    missing <- need[!file.exists(paste0(base, need))]
+    if (length(missing)) {
+      stop("Shapefile incompleto. Falta(m): ", paste(missing, collapse = ", "), call. = FALSE)
+    }
+    cat("Shapefile principal encontrado:", shp, "\n")
+    sfobj <- sf::st_read(shp, quiet = TRUE)
+    cat("Shapefile lido com sucesso.\n")
+    if (any(!sf::st_is_valid(sfobj))) {
+      tmp <- try(sf::st_make_valid(sfobj), silent = TRUE)
+      if (!inherits(tmp, "try-error")) sfobj <- tmp
+    }
+    epsg_now <- tryCatch(as.integer(sf::st_crs(sfobj)$epsg), error = function(e) NA_integer_)
+    if (is.na(epsg_now)) sf::st_crs(sfobj) <- 4326 else if (epsg_now != 4326) sfobj <- sf::st_transform(sfobj, 4326)
+    sfobj$nome_bairro <- choose_bairro_name(sfobj)
+    if (is.null(sfobj$ID_BAIRRO)) sfobj$ID_BAIRRO <- as.character(seq_len(nrow(sfobj)))
+    
+    try({
+      vcount <- sum(lengths(sf::st_geometry(sfobj)))
+      if (is.finite(vcount) && vcount > 2e5) {
+        sft <- sf::st_transform(sfobj, 31983)
+        sft <- sf::st_simplify(sft, dTolerance = 50, preserveTopology = TRUE)
+        sfobj <- sf::st_transform(sft, 4326)
+      }
+      cat("Shapefile simplificado (se necessário).\n")
+    }, silent = TRUE)
+    
+    sfobj
+  }
+  cat("Função load_bairros_shapefile definida.\n")
+
+  # Carrega dados geográficos
+  polys <- load_bairros_shapefile()
+  cat("Dados geográficos carregados.\n")
+
+  # Resto do código (continua a partir de "# Lê Excel (detecta abas por nome aproximado)")
+}, error = log_error)
   # Caminhos de dados (simplificado para raiz, sem pasta data)
   options(
     edu_data_path = file.path(".", "indicadores_rj_certo.xlsx"),
@@ -626,3 +735,4 @@ EXPOSE 3838
 # Run Shiny Server
 USER shiny
 CMD ["/usr/bin/shiny-server"]
+
