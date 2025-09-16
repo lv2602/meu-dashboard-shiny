@@ -9,9 +9,15 @@ RUN apt-get update && apt-get install -y \
     libcurl4-openssl-dev \
     && R -e "install.packages(c('sf', 'dplyr', 'rlang', 'tidyr', 'magrittr', 'ggplot2', 'scales', 'reactable', 'plotly', 'readxl', 'stringi', 'htmlwidgets', 'tibble'), repos='https://cran.rstudio.com/')"
 
-# Copie o app e dados
+# Copie o app e dados direto pra raiz
 COPY app.R /srv/shiny-server/
-COPY data /srv/shiny-server/data
+COPY indicadores_rj_certo.xlsx /srv/shiny-server/
+COPY Limite_de_Bairros.shp /srv/shiny-server/
+COPY Limite_de_Bairros.dbf /srv/shiny-server/
+COPY Limite_de_Bairros.shx /srv/shiny-server/
+# Adicione mais COPY se tiver outros arquivos de shapefile, ex:
+# COPY Limite_de_Bairros.prj /srv/shiny-server/
+# COPY Limite_de_Bairros.cpg /srv/shiny-server/
 
 # Exponha a porta
 EXPOSE 3838
