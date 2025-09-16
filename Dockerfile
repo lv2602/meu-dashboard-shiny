@@ -1,12 +1,13 @@
 FROM rocker/shiny:4.4.1
 
-# Instale pacotes R necessários (adicione mais se faltar)
+# Instale dependências do sistema e pacotes R
 RUN apt-get update && apt-get install -y \
     libgdal-dev \
     libproj-dev \
     libssl-dev \
     libxml2-dev \
     libcurl4-openssl-dev \
+    libudunits2-dev \
     && R -e "install.packages(c('sf', 'dplyr', 'rlang', 'tidyr', 'magrittr', 'ggplot2', 'scales', 'reactable', 'plotly', 'readxl', 'stringi', 'htmlwidgets', 'tibble'), repos='https://cran.rstudio.com/')"
 
 # Copie o app e dados direto pra raiz
