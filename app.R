@@ -1,4 +1,4 @@
-# App Shiny — RJ (usa arquivos na raiz do repo do Space)
+# App Shiny — RJ (usa arquivos na raiz do repo do Space) 
 options(
   edu_data_path = "indicadores_rj_certo.xlsx",
   edu_shp_path = "Limite_de_Bairros.shp"
@@ -302,6 +302,102 @@ make_school_corr_df2 <- function(educ_var, factor_var) {
 ui <- navbarPage(
   title = "Indicadores Educacionais - RJ",
   theme = bs_theme(bootswatch = "flatly"),
+  
+  # 1ª ABA: SOBRE O PROJETO -------------------------------------------------
+  tabPanel(
+    "Sobre o Projeto",
+    fluidRow(
+      column(
+        12,
+        h3("Sobre o Projeto"),
+        p(
+          "Este aplicativo Shiny foi desenvolvido para visualizar e analisar indicadores educacionais das escolas ",
+          "da rede estadual e federal da cidade do Rio de Janeiro, ",
+          "com foco em métricas como ENEM, IDEB e SAEB. Ele permite explorar distribuições geográficas, correlações e rankings ",
+          "de desempenho, bem como a evolução temporal desses indicadores."
+        ),
+        h4("Fontes de Dados"),
+        tags$ul(
+          tags$li(
+            "INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira) — dados de indicadores educacionais (IDEB) e avaliações:",
+            tags$br(),
+            tags$a(
+              href = "https://www.gov.br/inep/pt-br/areas-de-atuacao/pesquisas-estatisticas-e-indicadores/ideb",
+              target = "_blank",
+              "Página do IDEB no portal do Inep"
+            )
+          ),
+          tags$li(
+            "SAEB (Sistema de Avaliação da Educação Básica) — notas médias em Língua Portuguesa e Matemática:",
+            tags$br(),
+            tags$a(
+              href = "https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/saeb",
+              target = "_blank",
+              "Microdados SAEB – Inep"
+            )
+          ),
+          tags$li(
+            "ENEM (Exame Nacional do Ensino Médio) — dados de desempenho das escolas no exame, a partir do ranking consolidado pela Evolucional:",
+            tags$br(),
+            tags$a(
+              href = "https://microdados.evolucional.com.br/microdados/ranking-enem-2024",
+              target = "_blank",
+              "Ranking ENEM 2024 – Evolucional"
+            )
+          ),
+          tags$li(
+            "Prefeitura do Rio de Janeiro / Data.Rio — shapefile dos limites de bairros (Limite_de_Bairros.shp):",
+            tags$br(),
+            tags$a(
+              href = "https://www.data.rio/datasets/PCRJ::limite-de-bairros/about",
+              target = "_blank",
+              "Camada \"Limite de Bairros\" no Data.Rio"
+            )
+          ),
+          tags$li(
+            "Arquivo Excel ",
+            tags$code("indicadores_rj_certo.xlsx"),
+            ": consolidação dos indicadores educacionais das fontes acima para uso neste aplicativo."
+          )
+        ),
+        h4("Glossário das Variáveis"),
+        tags$dl(
+          tags$dt("ENEM_MEDIA"),
+          tags$dd("Média das notas no ENEM para as escolas, em uma escala de 0 a 1000."),
+          
+          tags$dt("IDEB_ANOS_FINAIS"),
+          tags$dd("Índice de Desenvolvimento da Educação Básica para os anos finais do ensino fundamental, em uma escala de 0 a 10."),
+          
+          tags$dt("SAEB_PORTUGUES"),
+          tags$dd("Nota média no SAEB para a disciplina de Português, em uma escala de 0 a 500."),
+          
+          tags$dt("SAEB_MATEMATICA"),
+          tags$dd("Nota média no SAEB para a disciplina de Matemática, em uma escala de 0 a 500."),
+          
+          tags$dt("APROVACAO_3SERIE"),
+          tags$dd("Percentual de aprovação na 3ª série do ensino médio."),
+          
+          tags$dt("ALUNO_POR_TURMA"),
+          tags$dd("Número médio de alunos por turma."),
+          
+          tags$dt("ALUNO_POR_PROFESSOR"),
+          tags$dd("Número médio de alunos por professor."),
+          
+          tags$dt("ALUNO_POR_SALA"),
+          tags$dd("Número médio de alunos por sala de aula."),
+          
+          tags$dt("% SALAS_COM_AR"),
+          tags$dd("Percentual de salas com ar-condicionado."),
+          
+          tags$dt("% TURMAS_COM_TEMPO_INTEGRAL"),
+          tags$dd("Percentual de turmas em tempo integral.")
+        )
+        # Créditos removidos, conforme pedido
+      )
+    )
+  ),
+  
+  # 2ª ABA: VISÃO GERAL ----------------------------------------------------
   tabPanel(
     "Visão Geral",
     sidebarLayout(
@@ -350,6 +446,8 @@ ui <- navbarPage(
       )
     )
   ),
+  
+  # 3ª ABA: MAPA -----------------------------------------------------------
   tabPanel(
     "Mapa (interativo)",
     sidebarLayout(
@@ -375,6 +473,8 @@ ui <- navbarPage(
       )
     )
   ),
+  
+  # 4ª ABA: ANÁLISE DE CORRELAÇÃO -----------------------------------------
   tabPanel(
     "Análise de Correlação",
     sidebarLayout(
@@ -415,6 +515,8 @@ ui <- navbarPage(
       )
     )
   ),
+  
+  # 5ª ABA: SÉRIES TEMPORAIS ----------------------------------------------
   tabPanel(
     "Séries Temporais",
     sidebarLayout(
@@ -436,39 +538,6 @@ ui <- navbarPage(
             downloadButton("download_time_series", "Baixar PNG", class = "btn-sm"),
             p("Nota: Dados históricos das médias dos indicadores (IDEB, SAEB Português e Matemática) calculadas sobre as escolas no arquivo Excel.")
         )
-      )
-    )
-  ),
-  tabPanel(
-    "Sobre o Projeto",
-    fluidRow(
-      column(12,
-             h3("Sobre o Projeto"),
-             p("Este aplicativo Shiny foi desenvolvido para visualizar e analisar indicadores educacionais das escolas no Rio de Janeiro, com foco em métricas como ENEM, IDEB e SAEB. Ele permite explorar distribuições geográficas, correlações e rankings."),
-             h4("Fontes de Dados"),
-             tags$ul(
-               tags$li("INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira): Fornece dados do IDEB (Índice de Desenvolvimento da Educação Básica)."),
-               tags$li("SAEB (Sistema de Avaliação da Educação Básica): Fonte das notas médias em Português e Matemática para o ensino fundamental."),
-               tags$li("ENEM (Exame Nacional do Ensino Médio): Dados das médias das notas das escolas no exame nacional."),
-               tags$li("Prefeitura do Rio de Janeiro: Shapefiles para os limites dos bairros (Limite_de_Bairros.shp), adaptados para visualização geográfica."),
-               tags$li("Arquivo Excel (indicadores_rj_certo.xlsx): Compilação de dados educacionais extraídos das fontes acima.")
-             ),
-             p("Os dados são carregados de arquivos locais no mesmo diretório do app.R, garantindo que .xlsx, .shp, .dbf e .shx estejam presentes."),
-             h4("Glossário das Variáveis"),
-             tags$dl(
-               tags$dt("ENEM_MEDIA"), tags$dd("Média das notas no ENEM para as escolas, em uma escala de 0 a 1000."),
-               tags$dt("IDEB_ANOS_FINAIS"), tags$dd("Índice de Desenvolvimento da Educação Básica para os anos finais do ensino fundamental, em uma escala de 0 a 10."),
-               tags$dt("SAEB_PORTUGUES"), tags$dd("Nota média no SAEB para a disciplina de Português, em uma escala de 0 a 500."),
-               tags$dt("SAEB_MATEMATICA"), tags$dd("Nota média no SAEB para a disciplina de Matemática, em uma escala de 0 a 500."),
-               tags$dt("APROVACAO_3SERIE"), tags$dd("Percentual de aprovação na 3ª série do ensino médio."),
-               tags$dt("ALUNO_POR_TURMA"), tags$dd("Número médio de alunos por turma."),
-               tags$dt("ALUNO_POR_PROFESSOR"), tags$dd("Número médio de alunos por professor."),
-               tags$dt("ALUNO_POR_SALA"), tags$dd("Número médio de alunos por sala de aula."),
-               tags$dt("% SALAS_COM_AR"), tags$dd("Percentual de salas com ar-condicionado."),
-               tags$dt("% TURMAS_COM_TEMPO_INTEGRAL"), tags$dd("Percentual de turmas em tempo integral.")
-             ),
-             h4("Créditos"),
-             p("Desenvolvido utilizando R e Shiny pela equipe de análise de dados educacionais. Agradecimentos às instituições INEP, MEC e Prefeitura do Rio de Janeiro pela disponibilização dos dados públicos. Contribuições e feedback são bem-vindos.")
       )
     )
   )
@@ -719,3 +788,4 @@ shinyApp(
   ui = ui, server = server,
   options = list(host = "0.0.0.0", port = as.integer(Sys.getenv("PORT","7860")))
 )
+
